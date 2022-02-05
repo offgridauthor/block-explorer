@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import Table from '@mui/material/Table'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import TableContainer from '@mui/material/TableContainer'
-import TableHead from '@mui/material/TableHead'
-import TableRow from '@mui/material/TableRow'
-import Paper from '@mui/material/Paper'
 
 export default function BlockTable() {
   const ethers = require('ethers')
-  const url = process.env.ALCHEMY_RINKEBY_URL
-  const provider = new ethers.providers.JsonRpcProvider(url)
+  const urls = {
+    rinkeby: process.env.ALCHEMY_RINKEBY_URL,
+    mainnet: process.env.ALCHEMY_MAINNET_URL,
+  }
+
   const tHeads = [
     'Block',
     'Timestamp',
@@ -19,20 +15,43 @@ export default function BlockTable() {
     'Gas Used',
     'Gas Limit',
   ]
+  const [activeProvider, setActiveProvider] = useState(urls.rinkeby)
+  let provider = new ethers.providers.JsonRpcProvider(activeProvider)
   const [blockData, setBlockData] = useState([])
   const [headerData, setHeaderData] = useState([])
   const blockCount = 5 // higher values take 100 years to render
+  let [isLoading, setIsLoading] = useState(false)
 
-  useEffect(() => {
+  function toggleActiveProvider() {
+    activeProvider == urls.rinkeby
+      ? setActiveProvider(urls.mainnet)
+      : setActiveProvider(urls.rinkeby)
+    provider = new ethers.providers.JsonRpcProvider(activeProvider)
+    // setIsLoading=true
     fetchHeaderData().then((response) => {
       setHeaderData(response)
+    })
+    fetchBlockData().then((response) => {
+      // console.log(response)
+      setBlockData(response)
+    })
+    // setIsLoading=false
+  }
+
+  useEffect(() => {
+    // setIsLoading=true
+    fetchHeaderData().then((response) => {
+      setHeaderData(response)
+      // setIsLoading=false
     })
   }, [setHeaderData])
 
   useEffect(() => {
+    // setIsLoading=true
     fetchBlockData().then((response) => {
       // console.log(response)
       setBlockData(response)
+      // setIsLoading=false
     })
   }, [setBlockData])
 
@@ -66,7 +85,7 @@ export default function BlockTable() {
         num: blockObj.number,
         timestamp: blockObj.timestamp,
         txs: blockObj.transactions.length,
-        miner: blockObj.miner,
+        miner: '0x....' + blockObj.miner.slice(-8, -1),
         gasUsed: blockObj.gasUsed._hex,
         gasLimit: blockObj.gasLimit._hex,
       })
@@ -78,36 +97,43 @@ export default function BlockTable() {
 
   return (
     <div>
+      {/* {isLoading ? ( */}
       {blockData.length < 1 ? (
-        <tr>
+        <div className='nes-container with-title is-centered is-rounded'>
           LOADING...
           <progress
             className='nes-progress is-pattern'
             value='50'
             max='100'
           ></progress>
-        </tr>
+        </div>
       ) : (
         <div>
-          <h5 className='nes-list is-circle'>
-            <ul>
-              <li>
-                Gas Price: <i class='nes-icon coin is-small'></i>
-                {headerData && headerData.gasPrice} gwei
-              </li>
-              <li>
-                Blockchain:{' '}
-                <button type='button' className='nes-btn is-primary'>
-                  {headerData && headerData.chainId == 'rinkeby' ? (
-                    <i class='nes-icon trophy is-small'></i>
-                  ) : (
-                    <i class='nes-icon star is-small'></i>
-                  )}
-                  {headerData && headerData.chainId}{' '}
-                </button>
-              </li>
-            </ul>
-          </h5>
+          <div className="list-container">
+            <h5 className='nes-list is-circle'>
+              <ul>
+                <li>
+                  Gas Price: <i className='nes-icon coin is-small'></i>
+                  {headerData && headerData.gasPrice} gwei
+                </li>
+                <li>
+                  Blockchain:{' '}
+                  <button
+                    type='button'
+                    className='nes-btn is-primary'
+                    onClick={toggleActiveProvider}
+                  >
+                    {headerData && headerData.chainId == 'rinkeby' ? (
+                      <i className='nes-icon trophy is-small'></i>
+                    ) : (
+                      <i className='nes-icon star is-small'></i>
+                    )}
+                    {headerData && headerData.chainId}{' '}
+                  </button>
+                </li>
+              </ul>
+            </h5>
+          </div>
           <div className='nes-table-responsive'>
             <table className='nes-table is-bordered is-cenered'>
               <thead>

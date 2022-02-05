@@ -1,0 +1,43 @@
+html,
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: rgb(2,0,36);
+  background: linear-gradient(90deg, rgb(109, 101, 199) 0%, rgb(221, 113, 86) 35%,rgb(189, 172, 119) 65%, rgb(52, 151, 179) 100%); 
+  color: #000;
+  overflow-x: hidden;
+}
+#root {
+  min-height: 100vh;
+  display: flex;
+}
+
+h1 {
+  text-shadow: 0 0 5px rgb(255, 239, 239);
+  margin: 5px auto 5px;
+}
+
+.list-container {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.main-page {
+  background: #fff;
+  flex-direction: column;
+  max-width: calc(100% - 1rem);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  margin: auto;
+  align-content: center;
+  display: flex;
+  text-align: left;
+  border-radius: 5px;
+}
+
+
+
+

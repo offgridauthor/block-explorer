@@ -9,12 +9,19 @@ import Paper from '@mui/material/Paper'
 
 export default function BlockTable() {
   const ethers = require('ethers')
-  const url = process.env.REACT_APP_ALCHEMY_RINKEBY_URL
+  const url = process.env.ALCHEMY_RINKEBY_URL
   const provider = new ethers.providers.JsonRpcProvider(url)
-  const tHeads = ['Block', 'Timestamp', 'Txn', 'Miner', 'Gas Used', 'Gas Limit']
+  const tHeads = [
+    'Block',
+    'Timestamp',
+    'Transactions',
+    'Miner',
+    'Gas Used',
+    'Gas Limit',
+  ]
   const [blockData, setBlockData] = useState([])
   const [headerData, setHeaderData] = useState([])
-  const blockCount=25
+  const blockCount = 5 // higher values take 100 years to render
 
   useEffect(() => {
     fetchHeaderData().then((response) => {
@@ -24,6 +31,7 @@ export default function BlockTable() {
 
   useEffect(() => {
     fetchBlockData().then((response) => {
+      // console.log(response)
       setBlockData(response)
     })
   }, [setBlockData])
@@ -40,27 +48,28 @@ export default function BlockTable() {
 
   const fetchBlockData = async () => {
     // console.log(block)
-    const blocks = []
+    const blocksArr = []
     let block = await provider.getBlock()
-    blocks.push(block)
-    for(let i=1; i< blockCount; i++){
-      block = await provider.getBlock(block.number-1)
-      blocks.push(block)
+    blocksArr.push(block)
+    for (let i = 1; i < blockCount; i++) {
+      block = await provider.getBlock(block.number - 1)
+      // console.log(i + " BLOCK " + block)
+      blocksArr.push(block)
     }
-    return processBlockData(blocks)
+    return processBlockData(blocksArr)
   }
 
   const processBlockData = (blocksArr) => {
-    for (let block of blocksArr) {
-      let tableRow = {
+    const tableRow = []
+    for (let blockObj of blocksArr) {
+      tableRow.push({
         num: blockObj.number,
         timestamp: blockObj.timestamp,
         txs: blockObj.transactions.length,
         miner: blockObj.miner,
         gasUsed: blockObj.gasUsed._hex,
         gasLimit: blockObj.gasLimit._hex,
-      }
-        
+      })
     }
     return tableRow
   }
@@ -69,43 +78,64 @@ export default function BlockTable() {
 
   return (
     <div>
-      <h5>
-        <ul>
-          <li>Gas Price: {headerData && headerData.gasPrice} gwei</li>
-          <li>Blockchain: {headerData && headerData.chainId} </li>
-        </ul>
-      </h5>
-      <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }} aria-label='simple-table'>
-          <TableHead>
-            <TableRow>
-              {tHeads.map((title) => (
-                <TableCell key={tHeads.indexOf(title)}>{title}</TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableCell>{blockData && blockData.num}</TableCell>
-            <TableCell>{blockData && blockData.timestamp}</TableCell>
-            <TableCell>{blockData && blockData.txs}</TableCell>
-            <TableCell>{blockData && blockData.miner}</TableCell>
-            <TableCell>{blockData && blockData.gasUsed}</TableCell>
-            <TableCell>{blockData && blockData.gasLimit}</TableCell>
-
-            {/* {blockData.length > 0 &&
-              blockData.map((val) => (
-                <TableRow
-                  key={val.num}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                >
-                  <TableCell>{val.num}</TableCell>
-                  <TableCell>CRAP</TableCell>
-
-                </TableRow>
-              ))} */}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {blockData.length < 1 ? (
+        <tr>
+          LOADING...
+          <progress
+            className='nes-progress is-pattern'
+            value='50'
+            max='100'
+          ></progress>
+        </tr>
+      ) : (
+        <div>
+          <h5 className='nes-list is-circle'>
+            <ul>
+              <li>
+                Gas Price: <i class='nes-icon coin is-small'></i>
+                {headerData && headerData.gasPrice} gwei
+              </li>
+              <li>
+                Blockchain:{' '}
+                <button type='button' className='nes-btn is-primary'>
+                  {headerData && headerData.chainId == 'rinkeby' ? (
+                    <i class='nes-icon trophy is-small'></i>
+                  ) : (
+                    <i class='nes-icon star is-small'></i>
+                  )}
+                  {headerData && headerData.chainId}{' '}
+                </button>
+              </li>
+            </ul>
+          </h5>
+          <div className='nes-table-responsive'>
+            <table className='nes-table is-bordered is-cenered'>
+              <thead>
+                <tr>
+                  {tHeads.map((title) => (
+                    <td key={tHeads.indexOf(title)}>{title}</td>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {blockData.map((val) => (
+                  <tr
+                    key={val.num}
+                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  >
+                    <td>{val.num}</td>
+                    <td>{val.timestamp}</td>
+                    <td>{val.txs}</td>
+                    <td>{val.miner}</td>
+                    <td>{val.gasUsed}</td>
+                    <td>{val.gasLimit}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
